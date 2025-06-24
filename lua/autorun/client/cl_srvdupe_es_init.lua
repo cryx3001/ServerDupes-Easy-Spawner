@@ -3,7 +3,7 @@ SrvDupeES = {}
 local function init()
     print("[SrvDupeES]\tServer Duplicator loaded, hello world!")
 
-    include("config/sh_config.lua")
+    include("config/sh_srvdupe_es_config.lua")
     include("easy_spawner/sh_srvdupe_es.lua")
     include("easy_spawner/client/cl_spawnmenu.lua")
 

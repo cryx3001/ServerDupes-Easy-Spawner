@@ -14,12 +14,11 @@ function SrvDupeES.SQL.CreateTables()
 			category_id TEXT NOT NULL,
 			name TEXT NOT NULL,
 			path TEXT NOT NULL,
-			author TEXT NOT NULL,
+			author TEXT,
 			description TEXT,
 			image TEXT,
 			active INTEGER DEFAULT 1,
-			created_by TEXT NOT NULL,
-			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			added_by TEXT NOT NULL,
 			FOREIGN KEY(category_id) REFERENCES server_dupe_categories(id)
 		);
 	]])
@@ -52,6 +51,10 @@ end
 
 local function clearNullResults(tbl)
     for k, v in pairs(tbl) do
+        if type(v) == "table" then
+            clearNullResults(v)
+            continue
+        end
         if v == "NULL" then
             tbl[k] = nil
         end
@@ -84,6 +87,40 @@ function SrvDupeES.SQL.GetDupesOfCategory(category_id)
     return clearNullResults(result or {})
 end
 
+function SrvDupeES.SQL.SaveDupe(data)
+    if not data or not data.id or not data.name or not data.category_id or not data.path then return end
+
+    local selectedId = data.SELECTED_ID
+    local tblKeysValue = {
+        id = data.id,
+        category_id = data.category_id,
+        name = data.name,
+        path = data.path,
+        author = data.author,
+        description = data.description,
+        image = data.image,
+        active = tonumber(data.active) or 1,
+        added_by = data.added_by
+    }
+
+    local query
+    if selectedId and selectedId ~= "" then
+        query = forgeSQLUpdate("server_dupe_items", tblKeysValue) .. " WHERE id = " .. sql.SQLStr(selectedId)
+    else
+        query = forgeSQLInsert("server_dupe_items", tblKeysValue)
+    end
+    print(query)
+
+    return sql.Query(query)
+end
+
+function SrvDupeES.SQL.DeleteDupe(id)
+    if not id or id == "" then return end
+
+    local query = "DELETE FROM server_dupe_items WHERE id = " .. sql.SQLStr(id)
+    return sql.Query(query)
+end
+
 -- CATEGORIES
 function SrvDupeES.SQL.GetCategory(id)
     local result = sql.QueryRow("SELECT * FROM server_dupe_categories WHERE id = " .. sql.SQLStr(id))
@@ -94,6 +131,33 @@ function SrvDupeES.SQL.GetAllCategories()
     local result = sql.Query("SELECT * FROM server_dupe_categories")
     result = setPrimaryKeyAsTblKey(result or {}, "id")
     return clearNullResults(result)
+end
+
+function SrvDupeES.SQL.SaveCategory(data)
+    if not data or not data.id or not data.name then return end
+
+    local selectedId = data.SELECTED_ID
+    local tblKeysValue = {
+        id = data.id,
+        name = data.name
+    }
+
+    local query
+    if selectedId and selectedId ~= "" then
+        query = forgeSQLUpdate("server_dupe_categories", tblKeysValue) .. " WHERE id = " .. sql.SQLStr(selectedId)
+    else
+        query = forgeSQLInsert("server_dupe_categories", tblKeysValue)
+    end
+    print(query)
+
+    return sql.Query(query)
+end
+
+function SrvDupeES.SQL.DeleteCategory(id)
+    if not id or id == "" then return end
+
+    local query = "DELETE FROM server_dupe_categories WHERE id = " .. sql.SQLStr(id)
+    return sql.Query(query)
 end
 
 SrvDupeES.SQL.CreateTables()

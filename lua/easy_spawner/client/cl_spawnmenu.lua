@@ -397,8 +397,9 @@ local function buildDupesCategories()
     return categorisedDupes
 end
 
-local function addCategory(tree, categoryId, dupes)
-    local categoryName = categoryId or "undefined"
+local function addCategory(tree, categoryId, tbl)
+    local dupes = tbl.dupes or {}
+    local categoryName = tbl.name or "Undefined"
     local node = tree:AddNode(categoryName)
     tree.Categories[categoryId] = node
 
@@ -477,8 +478,7 @@ hook.Add("SrvDupeES_Populate", "SrvDupeES_Populate", function(pnlContent, tree, 
 
     local categorisedDupes = buildDupesCategories()
     for categoryId, tbl in pairs(categorisedDupes) do
-        local dupes = tbl.dupes or {}
-        addCategory(tree, categoryId, dupes)
+        addCategory(tree, categoryId, tbl)
     end
 
     refreshPanels()

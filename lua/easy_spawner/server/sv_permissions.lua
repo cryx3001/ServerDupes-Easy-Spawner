@@ -1,0 +1,55 @@
+local PLY = FindMetaTable("Player")
+
+function PLY:GetDupeCount(categoryId, dupeId)
+    if not self.SrvDupeES.OwnedDupes or not self.SrvDupeES.OwnedDupes[categoryId] then
+        return 0
+    end
+
+    return self.SrvDupeES.OwnedDupes[categoryId][dupeId] or 0
+end
+
+function PLY:GetDupeCountByCategory(categoryId)
+    if not self.SrvDupeES.OwnedDupes or not self.SrvDupeES.OwnedDupes[categoryId] then
+        return 0
+    end
+    local count = 0
+    for _, dupeCount in pairs(self.SrvDupeES.OwnedDupes[categoryId]) do
+        count = count + dupeCount
+    end
+    return count
+end
+
+function PLY:GetAllDupesCount()
+    if not self.SrvDupeES.OwnedDupes then
+        return 0
+    end
+
+    local totalCount = 0
+    for categoryId, dupes in pairs(self.SrvDupeES.OwnedDupes) do
+        totalCount = totalCount + self:GetDupeCountByCategory(categoryId)
+    end
+
+    return totalCount
+end
+
+function PLY:IncrementDupeCount(categoryId, dupeId, count)
+    if not self.SrvDupeES.OwnedDupes[categoryId] then
+        self.SrvDupeES.OwnedDupes[categoryId] = {}
+    end
+
+    if not self.SrvDupeES.OwnedDupes[categoryId][dupeId] then
+        self.SrvDupeES.OwnedDupes[categoryId][dupeId] = 0
+    end
+
+    self.SrvDupeES.OwnedDupes[categoryId][dupeId] = self.SrvDupeES.OwnedDupes[categoryId][dupeId] + (count or 1)
+end
+
+function PLY:CanSpawnDupe(categoryId, dupeId)
+    if not self.SrvDupeES.OwnedDupes or not self.SrvDupeES.OwnedDupes[categoryId] then
+        return true
+    end
+
+    -- TODO: temp solution, go db
+
+    return self:GetDupeCount(categoryId, dupeId) < (SrvDupeES.Config.MaxDupesPerPlayer)
+end

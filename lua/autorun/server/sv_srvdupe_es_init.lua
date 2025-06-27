@@ -17,7 +17,18 @@ local function spawnDupe(ply, dupeId)
         filter = ply
     })
 
-    SrvDupe.LoadAndPaste(dupe.path, trace.HitPos, angle_zero, ply)
+    -- TODO: When the dupe id is updated, everything depending on it must be updated too
+
+    -- TODO: temp solution
+    if not ply:CanSpawnDupe(dupe.category_id, dupe.id) then
+        SrvDupeES.Notify("You have reached the limit of dupes you can spawn!", 1, 5, ply, true)
+        return
+    end
+
+    ply:IncrementDupeCount(dupe.category_id, dupe.id)
+    SrvDupe.LoadAndPaste(dupe.path, trace.HitPos, angle_zero, ply, function()
+        ply:IncrementDupeCount(dupe.category_id, dupe.id, -1)
+    end)
 end
 
 local function init()
@@ -32,6 +43,7 @@ local function init()
     include("easy_spawner/sh_srvdupe_es.lua")
     include("easy_spawner/server/sv_db.lua")
     include("easy_spawner/server/sv_net.lua")
+    include("easy_spawner/server/sv_permissions.lua")
 
     function SrvDupeES.Notify(msg, typ, dur, ply, showsrv)
         net.Start("SrvDupeES_Notify")
@@ -48,6 +60,12 @@ local function init()
     concommand.Add("srvdupe_es_spawn", function (ply, cmd, args, argStr)
         spawnDupe(ply, args[1])
     end)
+
+    hook.Add("PlayerInitialSpawn","SrvDupeES_AddPlayerTable",function(ply)
+        ply.SrvDupeES = ply.SrvDupeES or {}
+        ply.SrvDupeES.OwnedDupes = ply.SrvDupeES.OwnedDupes or {}
+    end)
+
 
     hook.Remove("SrvDupeES_Init")
 end

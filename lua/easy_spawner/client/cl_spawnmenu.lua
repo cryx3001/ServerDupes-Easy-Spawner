@@ -52,6 +52,17 @@ local function createListPanel(parent, tbl)
         end
     end
 
+    listView.SelectLineByDataId = function(id)
+        for _, line in pairs(listView:GetLines()) do
+            if line.itemData and line.itemData.id == id then
+                listView:SelectItem(line)
+                line.OnSelect()
+                return true
+            end
+        end
+        return false
+    end
+
     local addButton = vgui.Create("DButton", listPanel)
     addButton:Dock(BOTTOM)
     addButton:SetText("Add New")
@@ -248,12 +259,7 @@ local function refreshPanels()
     createAdminManagementWindow()
 
     if SrvDupeES.WindowAdmin and SrvDupeES.WindowAdmin.Tabs then
-        for _, tab in pairs(SrvDupeES.WindowAdmin.Tabs.Items) do
-            if tab.Tab:GetText() == activeTabName then
-                SrvDupeES.WindowAdmin.Tabs:SwitchToName(activeTabName)
-                break
-            end
-        end
+        SrvDupeES.WindowAdmin.Tabs:SwitchToName(activeTabName)
     end
 end
 
@@ -279,6 +285,21 @@ spawnmenu.AddCreationTab( "Server Dupes", function()
 
     return SrvDupeES.PanelSpawnMenu
 end, "icon16/server_database.png", 60 )
+
+local function openAndFillEntries(tabName, tabKey, id)
+    if not SrvDupeES.WindowAdmin or not IsValid(SrvDupeES.WindowAdmin) then
+        createAdminManagementWindow()
+    end
+
+    if SrvDupeES.WindowAdmin and SrvDupeES.WindowAdmin.Tabs then
+        SrvDupeES.WindowAdmin.Tabs:SwitchToName(tabName)
+    end
+
+    local tab = SrvDupeES.WindowAdmin[tabKey]
+    if not tab or not IsValid(tab) then return end
+    tab.ListView:ClearSelection()
+    tab.ListView.SelectLineByDataId(id)
+end
 
 spawnmenu.AddContentType( "server_dupe", function( container, obj )
     if (not obj.dupe) then return end
@@ -311,7 +332,17 @@ spawnmenu.AddContentType( "server_dupe", function( container, obj )
     icon.OpenMenu = function(self)
         local menu = DermaMenu()
 
+        menu:AddOption("Copy to clipboard", function()
+            SetClipboardText(dupe.id)
+        end):SetIcon("icon16/page_copy.png")
+
         if SrvDupeES.CheckPlyWritePermissions(LocalPlayer()) then
+            menu:AddSpacer()
+
+            menu:AddOption("Edit", function()
+                openAndFillEntries("Dupes", "MngDupes", dupe.id)
+            end):SetIcon("icon16/pencil.png")
+
             menu:AddOption("Delete", function()
                 Derma_Query("Are you sure you want to delete this dupe?", "Delete Dupe",
                     "Yes", function()
@@ -404,6 +435,12 @@ local function addCategory(tree, categoryId, dupes)
         end):SetIcon("icon16/arrow_refresh.png")
 
         if SrvDupeES.CheckPlyWritePermissions(LocalPlayer()) and categoryId ~= "undefined" then
+            menu:AddSpacer()
+
+            menu:AddOption("Edit", function()
+                openAndFillEntries("Categories", "MngCategories", categoryId)
+            end):SetIcon("icon16/pencil.png")
+
             menu:AddOption("Delete Category", function()
                 Derma_Query("Are you sure you want to delete this category?", "Delete Category",
                     "Yes", function()

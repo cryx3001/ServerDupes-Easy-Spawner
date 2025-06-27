@@ -1,10 +1,17 @@
-SrvDupeES = {}
+SrvDupeES = {
+    ImageFolder = "srvdupe_es_images",
+}
 
 local function init()
-    print("[SrvDupeES]\tServer Duplicator loaded, hello world!")
+    print("[SrvDupeES]\tServerDupe Easy Spawner loaded, hello world!")
+
+    if not file.Exists(SrvDupeES.ImageFolder, "DATA") then
+        file.CreateDir(SrvDupeES.ImageFolder)
+    end
 
     include("config/sh_srvdupe_es_config.lua")
     include("easy_spawner/sh_srvdupe_es.lua")
+    include("easy_spawner/client/cl_image.lua")
     include("easy_spawner/client/cl_spawnmenu.lua")
 
     function SrvDupeES.Notify(msg,typ,dur)

@@ -21,10 +21,11 @@ local function spawnDupe(ply, dupeId)
 end
 
 local function init()
-    print("[SrvDupeES]\tServer Duplicator loaded, hello world!")
+    print("[SrvDupeES]\tServerDupe Easy Spawner loaded, hello world!")
 
     AddCSLuaFile("config/sh_srvdupe_es_config.lua")
     AddCSLuaFile("easy_spawner/sh_srvdupe_es.lua")
+    AddCSLuaFile("easy_spawner/client/cl_image.lua")
     AddCSLuaFile("easy_spawner/client/cl_spawnmenu.lua")
 
     include("config/sh_srvdupe_es_config.lua")

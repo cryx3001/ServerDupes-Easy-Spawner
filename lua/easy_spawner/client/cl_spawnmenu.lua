@@ -377,7 +377,16 @@ local function addCategory(tree, categoryId, dupes)
         self.PropPanel:SetTriggerSpawnlistChange(false)
 
         for _, d in pairs(dupes) do
-            spawnmenu.CreateContentIcon("server_dupe", self.PropPanel, {dupe = d })
+            local icon = spawnmenu.CreateContentIcon("server_dupe", self.PropPanel, {dupe = d })
+            SrvDupeES.AttemptGetImage(d.image, function(imageData, ext)
+                if not imageData or imageData == "" then return end
+
+                local path = SrvDupeES.SaveImageIfNotExistsAndGet(d.id, imageData, ext)
+                if path then
+                    icon:SetMaterial("data/" .. path)
+                end
+
+            end)
         end
     end
 

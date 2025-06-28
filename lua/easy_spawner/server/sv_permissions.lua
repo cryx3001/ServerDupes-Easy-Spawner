@@ -45,11 +45,23 @@ function PLY:IncrementDupeCount(categoryId, dupeId, count)
 end
 
 function PLY:CanSpawnDupe(categoryId, dupeId)
+    -- TODO: temp
+    local allowedRolesSpawn = SrvDupeES.Config.AllowedRolesToSpawn or {}
+    local allowSteamIDSpawn = SrvDupeES.Config.AllowedSteamIDToSpawn or {}
+
+    if not table.HasValue(allowedRolesSpawn, self:GetUserGroup()) and not table.HasValue(allowSteamIDSpawn, self:SteamID()) then
+        return false, "You do not have permission to spawn dupes!"
+    end
+
     if not self.SrvDupeES.OwnedDupes or not self.SrvDupeES.OwnedDupes[categoryId] then
         return true
     end
 
     -- TODO: temp solution, go db
 
-    return self:GetDupeCount(categoryId, dupeId) < (SrvDupeES.Config.MaxDupesPerPlayer)
+    if self:GetDupeCount(categoryId, dupeId) >= (SrvDupeES.Config.MaxDupesPerPlayer) then
+        return false, "You have reached the limit of dupes you can spawn!"
+    end
+
+    return true
 end

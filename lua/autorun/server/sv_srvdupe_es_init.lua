@@ -20,8 +20,9 @@ local function spawnDupe(ply, dupeId)
     -- TODO: When the dupe id is updated, everything depending on it must be updated too
 
     -- TODO: temp solution
-    if not ply:CanSpawnDupe(dupe.category_id, dupe.id) then
-        SrvDupeES.Notify("You have reached the limit of dupes you can spawn!", 1, 5, ply, true)
+    local canSpawn, errMsg = ply:CanSpawnDupe(dupe.category_id, dupe.id)
+    if not canSpawn then
+        SrvDupeES.Notify(errMsg, 1, 5, ply, true)
         return
     end
 

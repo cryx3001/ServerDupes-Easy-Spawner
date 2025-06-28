@@ -26,9 +26,15 @@ local function spawnDupe(ply, dupeId)
     end
 
     ply:IncrementDupeCount(dupe.category_id, dupe.id)
-    SrvDupe.LoadAndPaste(dupe.path, trace.HitPos, angle_zero, ply, function()
+    local result = SrvDupe.LoadAndPaste(dupe.path, trace.HitPos, angle_zero, ply, function()
         ply:IncrementDupeCount(dupe.category_id, dupe.id, -1)
     end)
+
+    if not result then
+        SrvDupeES.Notify("Failed to spawn the dupe!", 1, 5, ply, true)
+        ply:IncrementDupeCount(dupe.category_id, dupe.id, -1)
+        return
+    end
 end
 
 local function init()

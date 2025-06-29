@@ -56,8 +56,6 @@ local function init()
     include("easy_spawner/server/sv_net.lua")
     include("easy_spawner/server/sv_permissions.lua")
 
-    CreateConVar("srvdupe_es_max_dupes_per_player", 50, {FCVAR_NOTIFY, FCVAR_ARCHIVE}, "Maximum number of dupes a player can own at the same time, -1 for infinite", -1)
-
     function SrvDupeES.Notify(msg, typ, dur, ply, showsrv)
         net.Start("SrvDupeES_Notify")
         net.WriteString(msg)

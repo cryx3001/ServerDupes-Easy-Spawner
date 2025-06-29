@@ -288,7 +288,6 @@ hook.Add("SrvDupeES_Populate", "SrvDupeES_Populate", function(pnlContent, tree, 
 
     refreshPanels()
 
-    -- get first node of tree.Categories
 	local firstNodeKey = next(tree.Categories)
 	if (IsValid(tree.Categories[firstNodeKey or ""]) ) then
 		tree.Categories[firstNodeKey]:InternalDoClick()
@@ -310,8 +309,6 @@ net.Receive("SrvDupe_ES_SendDupesAndCategories", function()
     SrvDupeES.AvailableDupes = dupes
     SrvDupeES.AvailableCategories = categories
     SrvDupeES.Permissions = permissions
-
-    PrintTable(SrvDupeES.Permissions)
 
     SrvDupeES.PanelSpawnMenu:CallPopulateHook("SrvDupeES_Populate")
 end)

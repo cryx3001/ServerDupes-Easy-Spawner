@@ -44,55 +44,50 @@ function PLY:IncrementDupeCount(categoryId, dupeId, count)
     self.SrvDupeES.OwnedDupes[categoryId][dupeId] = self.SrvDupeES.OwnedDupes[categoryId][dupeId] + (count or 1)
 end
 
-local function checkLimits(ply, dupeId, categoryId)
-    local dupeLimitTbl = SrvDupeES.SQL.GetPermissionsOfIdAndUsergroup(SrvDupeES.SQL.Enums.PermissionsTbl.DUPE, dupeId, ply:GetUserGroup())
-    local categoryLimitTbl = SrvDupeES.SQL.GetPermissionsOfIdAndUsergroup(SrvDupeES.SQL.Enums.PermissionsTbl.CATEGORY, categoryId, ply:GetUserGroup())
-
-    local dupeLimit = dupeLimitTbl and tonumber(dupeLimitTbl.max_value) or -1
-    local categoryLimit = categoryLimitTbl and tonumber(categoryLimitTbl.max_value) or -1
-
-    if dupeLimit == -1 then
-        dupeLimit = math.huge
+local function getMaxValueFromResult(tbl)
+    local maxValue
+    if not tbl then
+        maxValue = -1
+    else
+        maxValue = tonumber(tbl.max_value) or -1
     end
 
-    if categoryLimit == -1 then
-        categoryLimit = math.huge
+    if maxValue == -1 then
+        return math.huge
     end
 
-    local dupeSpawned = ply:GetDupeCount(categoryId, dupeId)
-    local categorySpawned = ply:GetDupeCountByCategory(categoryId)
+    return maxValue
+end
 
+function PLY:CanSpawnDupe(categoryId, dupeId)
+    local plyUserGroup = self:GetUserGroup()
+
+    -- 1. Check hard user group limit
+    local globalLimitTbl = (SrvDupeES.SQL.GetPermissionsOfUsergroup(SrvDupeES.SQL.Enums.PermissionsTbl.USERGROUP_GLOBAL_LIMITS, plyUserGroup) or {})[1]
+    local globalLimit = getMaxValueFromResult(globalLimitTbl)
+    local totalDupesCount = self:GetAllDupesCount()
+    if totalDupesCount >= globalLimit then
+        return false, "You have reached the global limit of dupes you can spawn!"
+    end
+
+    -- 2. Check dupe and category limits
+    local categoryLimitTbl = SrvDupeES.SQL.GetPermissionsOfIdAndUsergroup(SrvDupeES.SQL.Enums.PermissionsTbl.CATEGORY_LIMITS, categoryId, plyUserGroup)
+    local categoryLimit = getMaxValueFromResult(categoryLimitTbl)
+    local categorySpawned = self:GetDupeCountByCategory(categoryId)
     if categorySpawned >= categoryLimit then
         return false, "You have reached the limit of dupes you can spawn in this category!"
     end
 
+    -- 3. Check dupe specific limit
+    local dupeLimitTbl = SrvDupeES.SQL.GetPermissionsOfIdAndUsergroup(SrvDupeES.SQL.Enums.PermissionsTbl.DUPE_LIMITS, dupeId, plyUserGroup)
+    local dupeLimit = getMaxValueFromResult(dupeLimitTbl)
+    local dupeSpawned = self:GetDupeCount(categoryId, dupeId)
     if dupeSpawned >= dupeLimit then
         return false, "You have reached the limit of this dupe you can spawn!"
     end
 
     return true
 end
-
-function PLY:CanSpawnDupe(categoryId, dupeId)
-    local allowedRolesSpawn = SrvDupeES.Config.AllowedRolesToSpawn or {}
-    local allowSteamIDSpawn = SrvDupeES.Config.AllowedSteamIDToSpawn or {}
-
-    if not table.HasValue(allowedRolesSpawn, self:GetUserGroup()) and not table.HasValue(allowSteamIDSpawn, self:SteamID()) then
-        return false, "You do not have permission to spawn dupes!"
-    end
-
-    local maxDupesPerPlayer = GetConVar("srvdupe_es_max_dupes_per_player"):GetInt() or 50
-    if maxDupesPerPlayer < 0 then
-        maxDupesPerPlayer = math.huge
-    end
-
-    if self:GetDupeCount(categoryId, dupeId) >= maxDupesPerPlayer then
-        return false, "You have reached the limit of dupes you can spawn!"
-    end
-
-    return checkLimits(self, dupeId, categoryId)
-end
-
 
 
 local possibleTypesItem = {

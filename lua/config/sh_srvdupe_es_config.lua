@@ -1,13 +1,4 @@
 SrvDupeES.Config = {
-    AllowedRolesToSpawn = { -- TODO: temp
-        "superadmin",
-        "admin"
-    },
-
-    AllowedSteamIDToSpawn = { -- TODO: temp
-        "STEAM_0:0:20209473" -- Cryx
-    },
-
     AllowedRolesWrite = {
         "owner",
         "superadmin",

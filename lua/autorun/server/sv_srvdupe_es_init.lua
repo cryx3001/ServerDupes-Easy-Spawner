@@ -19,7 +19,6 @@ local function spawnDupe(ply, dupeId)
 
     -- TODO: When the dupe id is updated, everything depending on it must be updated too
 
-    -- TODO: temp solution
     local canSpawn, errMsg = ply:CanSpawnDupe(dupe.category_id, dupe.id)
     if not canSpawn then
         SrvDupeES.Notify(errMsg, 1, 5, ply, true)
@@ -51,6 +50,8 @@ local function init()
     include("easy_spawner/server/sv_db.lua")
     include("easy_spawner/server/sv_net.lua")
     include("easy_spawner/server/sv_permissions.lua")
+
+    CreateConVar("srvdupe_es_max_dupes_per_player", 50, {FCVAR_NOTIFY, FCVAR_ARCHIVE}, "Maximum number of dupes a player can own at the same time, -1 for infinite", -1)
 
     function SrvDupeES.Notify(msg, typ, dur, ply, showsrv)
         net.Start("SrvDupeES_Notify")

@@ -44,8 +44,36 @@ function PLY:IncrementDupeCount(categoryId, dupeId, count)
     self.SrvDupeES.OwnedDupes[categoryId][dupeId] = self.SrvDupeES.OwnedDupes[categoryId][dupeId] + (count or 1)
 end
 
+local function checkLimits(ply, dupeId, categoryId)
+    local dupeLimitTbl = SrvDupeES.SQL.GetPermissionsOfIdAndUsergroup(SrvDupeES.SQL.Enums.PermissionsTbl.DUPE, dupeId, ply:GetUserGroup())
+    local categoryLimitTbl = SrvDupeES.SQL.GetPermissionsOfIdAndUsergroup(SrvDupeES.SQL.Enums.PermissionsTbl.CATEGORY, categoryId, ply:GetUserGroup())
+
+    local dupeLimit = dupeLimitTbl and tonumber(dupeLimitTbl.max_value) or -1
+    local categoryLimit = categoryLimitTbl and tonumber(categoryLimitTbl.max_value) or -1
+
+    if dupeLimit == -1 then
+        dupeLimit = math.huge
+    end
+
+    if categoryLimit == -1 then
+        categoryLimit = math.huge
+    end
+
+    local dupeSpawned = ply:GetDupeCount(categoryId, dupeId)
+    local categorySpawned = ply:GetDupeCountByCategory(categoryId)
+
+    if categorySpawned >= categoryLimit then
+        return false, "You have reached the limit of dupes you can spawn in this category!"
+    end
+
+    if dupeSpawned >= dupeLimit then
+        return false, "You have reached the limit of this dupe you can spawn!"
+    end
+
+    return true
+end
+
 function PLY:CanSpawnDupe(categoryId, dupeId)
-    -- TODO: temp
     local allowedRolesSpawn = SrvDupeES.Config.AllowedRolesToSpawn or {}
     local allowSteamIDSpawn = SrvDupeES.Config.AllowedSteamIDToSpawn or {}
 
@@ -53,15 +81,14 @@ function PLY:CanSpawnDupe(categoryId, dupeId)
         return false, "You do not have permission to spawn dupes!"
     end
 
-    if not self.SrvDupeES.OwnedDupes or not self.SrvDupeES.OwnedDupes[categoryId] then
-        return true
+    local maxDupesPerPlayer = GetConVar("srvdupe_es_max_dupes_per_player"):GetInt() or 50
+    if maxDupesPerPlayer < 0 then
+        maxDupesPerPlayer = math.huge
     end
 
-    -- TODO: temp solution, go db
-
-    if self:GetDupeCount(categoryId, dupeId) >= (SrvDupeES.Config.MaxDupesPerPlayer) then
+    if self:GetDupeCount(categoryId, dupeId) >= maxDupesPerPlayer then
         return false, "You have reached the limit of dupes you can spawn!"
     end
 
-    return true
+    return checkLimits(self, dupeId, categoryId)
 end

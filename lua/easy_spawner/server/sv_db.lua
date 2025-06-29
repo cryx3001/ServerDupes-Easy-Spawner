@@ -1,4 +1,5 @@
 SrvDupeES.SQL = {}
+SrvDupeES.SQL.Enums = {}
 
 function SrvDupeES.SQL.CreateTables()
     sql.Query([[
@@ -22,6 +23,24 @@ function SrvDupeES.SQL.CreateTables()
 			FOREIGN KEY(category_id) REFERENCES server_dupe_categories(id)
 		);
 	]])
+
+    sql.Query([[
+        CREATE TABLE IF NOT EXISTS server_dupe_item_permissions (
+            id TEXT NOT NULL,
+            usergroup TEXT NOT NULL,
+            max_value INTEGER DEFAULT -1,
+            UNIQUE(id, usergroup)
+        );
+    ]])
+
+    sql.Query([[
+        CREATE TABLE IF NOT EXISTS server_dupe_category_permissions (
+            id TEXT NOT NULL,
+            usergroup TEXT NOT NULL,
+            max_value INTEGER DEFAULT -1,
+            UNIQUE(id, usergroup)
+        );
+    ]])
 end
 
 local function forgeSQLInsert(tblName, tblKeysValue)
@@ -157,6 +176,57 @@ function SrvDupeES.SQL.DeleteCategory(id)
     if not id or id == "" then return end
 
     local query = "DELETE FROM server_dupe_categories WHERE id = " .. sql.SQLStr(id)
+    return sql.Query(query)
+end
+
+-- Permissions
+SrvDupeES.SQL.Enums.PermissionsTbl = {
+    DUPE = "server_dupe_item_permissions",
+    CATEGORY = "server_dupe_category_permissions"
+}
+
+function SrvDupeES.SQL.GetPermissionsOfId(nameTbl, id)
+    if not nameTbl or not id then return {} end
+
+    local query = "SELECT * FROM " .. sql.SQLStr(nameTbl, true) .. " WHERE id = " .. sql.SQLStr(id)
+    local result = sql.Query(query)
+    return clearNullResults(result or {})
+end
+
+function SrvDupeES.SQL.GetPermissionsOfUsergroup(nameTbl, usergroup)
+    if not nameTbl or not usergroup then return {} end
+
+    local query = "SELECT * FROM " .. sql.SQLStr(nameTbl, true) .. " WHERE usergroup = " .. sql.SQLStr(usergroup)
+    local result = sql.Query(query)
+    return clearNullResults(result or {})
+end
+
+function SrvDupeES.SQL.GetPermissionsOfIdAndUsergroup(nameTbl, id, usergroup)
+    if not nameTbl or not id or not usergroup then return {} end
+
+    local query = "SELECT * FROM " .. sql.SQLStr(nameTbl, true) .. " WHERE id = " .. sql.SQLStr(id) .. " AND usergroup = " .. sql.SQLStr(usergroup)
+    local result = sql.QueryRow(query)
+    return clearNullResults(result or {})
+end
+
+function SrvDupeES.SQL.SavePermission(nameTbl, data)
+    if not nameTbl or not data or not data.id or not data.usergroup then return end
+
+    local selectedId = data.SELECTED_ID
+    local tblKeysValue = {
+        id = data.id,
+        usergroup = data.usergroup,
+        max_value = tonumber(data.max_value) or -1
+    }
+
+    local query
+    if selectedId and selectedId ~= "" then
+        query = forgeSQLUpdate(nameTbl, tblKeysValue) .. " WHERE id = " .. sql.SQLStr(selectedId) .. " AND usergroup = " .. sql.SQLStr(data.usergroup)
+    else
+        query = forgeSQLInsert(nameTbl, tblKeysValue)
+    end
+    print(query)
+
     return sql.Query(query)
 end
 

@@ -9,9 +9,21 @@ util.AddNetworkString("SrvDupeES_DeleteDupe")
 function SrvDupeES.SendDupesAndCategories(ply)
     local dupes = SrvDupeES.SQL.GetAllDupes()
     local categories = SrvDupeES.SQL.GetAllCategories()
+
+    local dupeLimits = SrvDupeES.SQL.GetAllPermissions(SrvDupeES.SQL.Enums.PermissionsTbl.DUPE_LIMITS)
+    local categoryLimits = SrvDupeES.SQL.GetAllPermissions(SrvDupeES.SQL.Enums.PermissionsTbl.CATEGORY_LIMITS)
+    local usergroupGlobalLimits = SrvDupeES.SQL.GetAllPermissions(SrvDupeES.SQL.Enums.PermissionsTbl.USERGROUP_GLOBAL_LIMITS)
+
+    local permissions = {
+        DUPE_LIMITS = dupeLimits,
+        CATEGORY_LIMITS = categoryLimits,
+        USERGROUP_GLOBAL_LIMITS = usergroupGlobalLimits
+    }
+
     net.Start("SrvDupe_ES_SendDupesAndCategories")
         net.WriteTable(dupes)
         net.WriteTable(categories)
+        net.WriteTable(permissions)
     if not ply then
         net.Broadcast()
     else

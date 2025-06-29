@@ -15,6 +15,7 @@ local function init()
     include("easy_spawner/sh_srvdupe_es.lua")
     include("easy_spawner/client/cl_image.lua")
     include("easy_spawner/client/cl_spawnmenu.lua")
+    include("easy_spawner/client/vgui/vgui_slider.lua")
     include("easy_spawner/client/vgui/vgui_cat_dupes_tab.lua")
     include("easy_spawner/client/vgui/vgui_permissions_tab.lua")
 

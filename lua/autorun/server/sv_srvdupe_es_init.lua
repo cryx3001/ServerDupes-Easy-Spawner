@@ -45,6 +45,7 @@ local function init()
     AddCSLuaFile("easy_spawner/sh_srvdupe_es.lua")
     AddCSLuaFile("easy_spawner/client/cl_image.lua")
     AddCSLuaFile("easy_spawner/client/cl_spawnmenu.lua")
+    AddCSLuaFile("easy_spawner/client/vgui/vgui_slider.lua")
     AddCSLuaFile("easy_spawner/client/vgui/vgui_cat_dupes_tab.lua")
     AddCSLuaFile("easy_spawner/client/vgui/vgui_permissions_tab.lua")
 
@@ -71,6 +72,16 @@ local function init()
 
     concommand.Add("srvdupe_es_spawn", function (ply, cmd, args, argStr)
         spawnDupe(ply, args[1])
+    end)
+
+    concommand.Add("srvdupe_es_limits", function(ply, cmd, args, argStr)
+        print("srvdupe_es_limits", argStr)
+        if not SrvDupeES.CheckPlyWritePermissions(ply) then
+            SrvDupeES.Notify("You do not have permission to modify limits.", 1, 5, ply, true)
+            return
+        end
+
+        SrvDupeES.HandleLimitsCommand(ply, args)
     end)
 
     hook.Add("PlayerInitialSpawn","SrvDupeES_AddPlayerTable",function(ply)

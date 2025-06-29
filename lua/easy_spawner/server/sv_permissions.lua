@@ -92,3 +92,93 @@ function PLY:CanSpawnDupe(categoryId, dupeId)
 
     return checkLimits(self, dupeId, categoryId)
 end
+
+
+
+local possibleTypesItem = {
+    CATEGORY_LIMITS = true,
+    DUPE_LIMITS = true,
+    USERGROUP_GLOBAL_LIMITS = false,
+}
+
+local function addLimit(ply, data)
+    if not data or not data.type or not data.usergroup or not data.maxValue then return false end
+    if possibleTypesItem[data.type] == nil or (possibleTypesItem[data.type] == true and not data.idItem) then
+        return false
+    end
+
+    if data.type == "DUPE_LIMITS" or data.type == "CATEGORY_LIMITS" then
+        local dataQuery = {
+            id = data.idItem,
+            usergroup = data.usergroup,
+            max_value = data.maxValue
+        }
+        return SrvDupeES.SQL.SavePermission(SrvDupeES.SQL.Enums.PermissionsTbl[data.type], dataQuery)
+    else
+        return SrvDupeES.SQL.SaveUserGroupLimit(data.usergroup, data.maxValue)
+    end
+end
+
+local function editLimit(ply, data)
+    if not data or not data.type or not data.usergroup or not data.maxValue then return end
+    if possibleTypesItem[data.type] == nil or (possibleTypesItem[data.type] == true and not data.idItem) then
+        return false
+    end
+
+    if data.type == "DUPE_LIMITS" or data.type == "CATEGORY_LIMITS" then
+        local dataQuery = {
+            id = data.idItem,
+            usergroup = data.usergroup,
+            max_value = data.maxValue,
+            SELECTED_ID = data.idItem
+        }
+        return SrvDupeES.SQL.SavePermission(SrvDupeES.SQL.Enums.PermissionsTbl[data.type], dataQuery)
+    else
+        return SrvDupeES.SQL.SaveUserGroupLimit(data.usergroup, data.maxValue)
+    end
+end
+
+local function deleteLimit(ply, data)
+    if not data or not data.type or not data.usergroup then return end
+    if possibleTypesItem[data.type] == nil or (possibleTypesItem[data.type] == true and not data.idItem) then
+        return false
+    end
+
+    if data.type == "DUPE_LIMITS" or data.type == "CATEGORY_LIMITS" then
+        return SrvDupeES.SQL.DeletePermissionItem(SrvDupeES.SQL.Enums.PermissionsTbl[data.type], data.idItem, data.usergroup)
+    else
+        return SrvDupeES.SQL.DeletePermissionGlobalLimit(SrvDupeES.SQL.Enums.PermissionsTbl[data.type], data.usergroup)
+    end
+end
+
+local possibleTypesOp = {
+    add = addLimit,
+    edit = editLimit,
+    delete = deleteLimit
+}
+function SrvDupeES.HandleLimitsCommand(ply, args)
+    if not SrvDupeES.CheckPlyWritePermissions(ply) then
+        SrvDupeES.Notify("You do not have permission to modify limits.", 1, 5, ply, true)
+        return
+    end
+
+    if #args < 3 then
+        return
+    end
+
+    local typeOp = args[1]
+    local funcTypeOp = possibleTypesOp[typeOp]
+    if not funcTypeOp then
+        return
+    end
+    local data = {
+        type = args[2],
+        usergroup = args[3],
+        maxValue = tonumber(args[4]),
+        idItem = args[5]
+    }
+
+    local res =funcTypeOp(ply, data) == nil
+    SrvDupeES.SendDupesAndCategories()
+    return res
+end

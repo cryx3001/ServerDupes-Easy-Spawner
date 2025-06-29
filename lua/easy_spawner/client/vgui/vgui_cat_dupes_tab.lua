@@ -22,7 +22,7 @@ end
 local function createListPanel(parent, tbl)
     local listPanel = vgui.Create("DPanel", parent)
     listPanel:Dock(LEFT)
-    listPanel:SetWidth(200)
+    listPanel:SetWidth(250)
 
     local listView = vgui.Create("DListView", listPanel)
     listView:Dock(FILL)

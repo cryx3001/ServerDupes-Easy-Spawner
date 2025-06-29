@@ -25,7 +25,15 @@ function SrvDupeES.SQL.CreateTables()
 	]])
 
     sql.Query([[
-        CREATE TABLE IF NOT EXISTS server_dupe_item_permissions (
+        CREATE TABLE IF NOT EXISTS server_dupe_usergroup_global_limits (
+            usergroup TEXT PRIMARY KEY,
+            max_value INTEGER DEFAULT -1
+        );
+    ]]
+    )
+
+    sql.Query([[
+        CREATE TABLE IF NOT EXISTS server_dupe_item_limits (
             id TEXT NOT NULL,
             usergroup TEXT NOT NULL,
             max_value INTEGER DEFAULT -1,
@@ -34,7 +42,7 @@ function SrvDupeES.SQL.CreateTables()
     ]])
 
     sql.Query([[
-        CREATE TABLE IF NOT EXISTS server_dupe_category_permissions (
+        CREATE TABLE IF NOT EXISTS server_dupe_category_limits (
             id TEXT NOT NULL,
             usergroup TEXT NOT NULL,
             max_value INTEGER DEFAULT -1,
@@ -128,7 +136,6 @@ function SrvDupeES.SQL.SaveDupe(data)
     else
         query = forgeSQLInsert("server_dupe_items", tblKeysValue)
     end
-    print(query)
 
     return sql.Query(query)
 end
@@ -167,7 +174,6 @@ function SrvDupeES.SQL.SaveCategory(data)
     else
         query = forgeSQLInsert("server_dupe_categories", tblKeysValue)
     end
-    print(query)
 
     return sql.Query(query)
 end
@@ -181,9 +187,18 @@ end
 
 -- Permissions
 SrvDupeES.SQL.Enums.PermissionsTbl = {
-    DUPE = "server_dupe_item_permissions",
-    CATEGORY = "server_dupe_category_permissions"
+    USERGROUP_GLOBAL_LIMITS = "server_dupe_usergroup_global_limits",
+    DUPE_LIMITS = "server_dupe_item_limits",
+    CATEGORY_LIMITS = "server_dupe_category_limits",
 }
+
+function SrvDupeES.SQL.GetAllPermissions(nameTbl)
+    if not nameTbl then return {} end
+
+    local query = "SELECT * FROM " .. sql.SQLStr(nameTbl, true)
+    local result = sql.Query(query)
+    return clearNullResults(result or {})
+end
 
 function SrvDupeES.SQL.GetPermissionsOfId(nameTbl, id)
     if not nameTbl or not id then return {} end
@@ -209,6 +224,20 @@ function SrvDupeES.SQL.GetPermissionsOfIdAndUsergroup(nameTbl, id, usergroup)
     return clearNullResults(result or {})
 end
 
+function SrvDupeES.SQL.DeletePermissionItem(nameTbl, id, usergroup)
+    if not nameTbl or not id or not usergroup then return end
+
+    local query = "DELETE FROM " .. sql.SQLStr(nameTbl, true) .. " WHERE id = " .. sql.SQLStr(id) .. " AND usergroup = " .. sql.SQLStr(usergroup)
+    return sql.Query(query)
+end
+
+function SrvDupeES.SQL.DeletePermissionGlobalLimit(nameTbl, usergroup)
+    if not nameTbl or not usergroup then return end
+
+    local query = "DELETE FROM " .. sql.SQLStr(nameTbl, true) .. " WHERE usergroup = " .. sql.SQLStr(usergroup)
+    return sql.Query(query)
+end
+
 function SrvDupeES.SQL.SavePermission(nameTbl, data)
     if not nameTbl or not data or not data.id or not data.usergroup then return end
 
@@ -225,13 +254,27 @@ function SrvDupeES.SQL.SavePermission(nameTbl, data)
     else
         query = forgeSQLInsert(nameTbl, tblKeysValue)
     end
-    print(query)
+
+    return sql.Query(query)
+end
+
+function SrvDupeES.SQL.SaveUserGroupLimit(usergroup, maxValue)
+    if not usergroup or not maxValue then return end
+
+    local tblKeysValue = {
+        usergroup = usergroup,
+        max_value = tonumber(maxValue) or -1
+    }
+
+    local exists =  (SrvDupeES.SQL.GetPermissionsOfUsergroup(SrvDupeES.SQL.Enums.PermissionsTbl.USERGROUP_GLOBAL_LIMITS, usergroup) or {})[1]
+    local query
+    if exists then
+        query = forgeSQLUpdate("server_dupe_usergroup_global_limits", tblKeysValue) .. " WHERE usergroup = " .. sql.SQLStr(usergroup)
+    else
+        query = forgeSQLInsert("server_dupe_usergroup_global_limits", tblKeysValue)
+    end
 
     return sql.Query(query)
 end
 
 SrvDupeES.SQL.CreateTables()
-print("-----------")
-PrintTable(SrvDupeES.SQL.GetAllCategories())
-print("-----------")
-PrintTable(SrvDupeES.SQL.GetAllDupes())

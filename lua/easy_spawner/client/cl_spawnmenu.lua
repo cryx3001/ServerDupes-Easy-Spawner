@@ -2,7 +2,7 @@ local function createAdminManagementWindow()
     if SrvDupeES.WindowAdmin then return end
 
     SrvDupeES.WindowAdmin = vgui.Create( "DFrame" )
-    SrvDupeES.WindowAdmin:SetSize(600, 700)
+    SrvDupeES.WindowAdmin:SetSize(750, 600)
     SrvDupeES.WindowAdmin:Center()
     SrvDupeES.WindowAdmin:SetTitle("Server Dupes - Admin Panel")
     SrvDupeES.WindowAdmin:SetVisible(true)
@@ -148,7 +148,29 @@ spawnmenu.AddContentType("server_dupe", function( container, obj )
     return icon
 end)
 
-local function buildDupesCategories()
+local function sortDupes(dupesTbl, key)
+    table.sort(dupesTbl, function(a, b)
+        if not a[key] or not b[key] then return false end
+        return string.lower(a[key]) < string.lower(b[key])
+    end)
+end
+
+local function sortCategories(categoriesTbl)
+    local sortedKeys = {}
+    for key in pairs(categoriesTbl) do
+        table.insert(sortedKeys, key)
+    end
+    table.sort(sortedKeys)
+
+    local sortedCategories = {}
+    for _, key in ipairs(sortedKeys) do
+        sortedCategories[key] = categoriesTbl[key]
+        sortDupes(sortedCategories[key].dupes, "id")
+    end
+    return sortedCategories
+end
+
+function SrvDupeES.BuildDupesCategories()
     local categorisedDupes = {}
 
     for id, v in pairs(SrvDupeES.AvailableCategories) do
@@ -177,7 +199,7 @@ local function buildDupesCategories()
         table.insert(categorisedDupes[categoryDupeId].dupes, dupe)
     end
 
-    return categorisedDupes
+    return sortCategories(categorisedDupes)
 end
 
 local function addCategory(tree, categoryId, tbl)
@@ -259,7 +281,7 @@ hook.Add("SrvDupeES_Populate", "SrvDupeES_Populate", function(pnlContent, tree, 
 
     tree.Categories = {}
 
-    local categorisedDupes = buildDupesCategories()
+    local categorisedDupes = SrvDupeES.BuildDupesCategories()
     for categoryId, tbl in pairs(categorisedDupes) do
         addCategory(tree, categoryId, tbl)
     end
@@ -283,9 +305,13 @@ end)
 net.Receive("SrvDupe_ES_SendDupesAndCategories", function()
     local dupes = net.ReadTable() or {}
     local categories = net.ReadTable() or {}
+    local permissions = net.ReadTable() or {}
 
     SrvDupeES.AvailableDupes = dupes
     SrvDupeES.AvailableCategories = categories
+    SrvDupeES.Permissions = permissions
+
+    PrintTable(SrvDupeES.Permissions)
 
     SrvDupeES.PanelSpawnMenu:CallPopulateHook("SrvDupeES_Populate")
 end)

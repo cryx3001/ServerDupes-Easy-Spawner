@@ -1,5 +1,6 @@
 SrvDupeES = {
     ImageFolder = "srvdupe_es_images",
+    VGUI = {}
 }
 
 local function init()
@@ -14,6 +15,8 @@ local function init()
     include("easy_spawner/sh_srvdupe_es.lua")
     include("easy_spawner/client/cl_image.lua")
     include("easy_spawner/client/cl_spawnmenu.lua")
+    include("easy_spawner/client/vgui/vgui_cat_dupes_tab.lua")
+    include("easy_spawner/client/vgui/vgui_permissions_tab.lua")
 
     function SrvDupeES.Notify(msg,typ,dur)
         surface.PlaySound(typ == 1 and "buttons/button10.wav" or "ambient/water/drip1.wav")

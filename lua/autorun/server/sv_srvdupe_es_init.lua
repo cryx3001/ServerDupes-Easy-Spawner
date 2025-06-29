@@ -45,6 +45,8 @@ local function init()
     AddCSLuaFile("easy_spawner/sh_srvdupe_es.lua")
     AddCSLuaFile("easy_spawner/client/cl_image.lua")
     AddCSLuaFile("easy_spawner/client/cl_spawnmenu.lua")
+    AddCSLuaFile("easy_spawner/client/vgui/vgui_cat_dupes_tab.lua")
+    AddCSLuaFile("easy_spawner/client/vgui/vgui_permissions_tab.lua")
 
     include("config/sh_srvdupe_es_config.lua")
     include("easy_spawner/sh_cami.lua")

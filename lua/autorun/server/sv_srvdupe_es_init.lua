@@ -41,11 +41,13 @@ local function init()
     print("[SrvDupeES]\tServerDupe Easy Spawner loaded, hello world!")
 
     AddCSLuaFile("config/sh_srvdupe_es_config.lua")
+    AddCSLuaFile("easy_spawner/sh_cami.lua")
     AddCSLuaFile("easy_spawner/sh_srvdupe_es.lua")
     AddCSLuaFile("easy_spawner/client/cl_image.lua")
     AddCSLuaFile("easy_spawner/client/cl_spawnmenu.lua")
 
     include("config/sh_srvdupe_es_config.lua")
+    include("easy_spawner/sh_cami.lua")
     include("easy_spawner/sh_srvdupe_es.lua")
     include("easy_spawner/server/sv_db.lua")
     include("easy_spawner/server/sv_net.lua")

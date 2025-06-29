@@ -10,6 +10,7 @@ local function init()
     end
 
     include("config/sh_srvdupe_es_config.lua")
+    include("easy_spawner/sh_cami.lua")
     include("easy_spawner/sh_srvdupe_es.lua")
     include("easy_spawner/client/cl_image.lua")
     include("easy_spawner/client/cl_spawnmenu.lua")

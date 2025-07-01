@@ -50,7 +50,7 @@ local function createButtonAdminManagement(parent)
     if not SrvDupeES.CheckPlyWritePermissions(LocalPlayer()) then return end
 
     SrvDupeES.ButtonManage = vgui.Create( "DButton", parent )
-    SrvDupeES.ButtonManage:SetText("Admin Management")
+    SrvDupeES.ButtonManage:SetText("Admin Panel")
     SrvDupeES.ButtonManage:SetSize(120, 50)
 
     SrvDupeES.ButtonManage.DoClick = function()

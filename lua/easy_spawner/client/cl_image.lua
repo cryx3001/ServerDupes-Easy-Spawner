@@ -40,8 +40,9 @@ function SrvDupeES.AttemptGetImage(url, callBackSuccess)
 end
 
 local function getDupeImageDir()
-    local ipAddress = game.GetIPAddress()
-    local path = SrvDupeES.ImageFolder .. "/" .. ipAddress
+    local sanitizedIpAddress = string.gsub(game.GetIPAddress() or "0.0.0.0:0", ":", "_")
+
+    local path = SrvDupeES.ImageFolder .. "/" .. sanitizedIpAddress
     if not file.Exists(path, "DATA") then
         file.CreateDir(path)
     end

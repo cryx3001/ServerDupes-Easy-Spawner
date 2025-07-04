@@ -1,9 +1,21 @@
+SrvDupeES.CachedImages = SrvDupeES.CachedImages or {}
+
 local authorizedImageFormats = {
     "png",
     "jpg",
     "jpeg",
 }
 
+local function getDupeImageDir()
+    local sanitizedIpAddress = string.gsub(game.GetIPAddress() or "0.0.0.0:0", ":", "_")
+
+    local path = SrvDupeES.ImageFolder .. "/" .. sanitizedIpAddress
+    if not file.Exists(path, "DATA") then
+        file.CreateDir(path)
+    end
+    SrvDupeES.PathServerImages = path
+    return path
+end
 
 local function isContentTypeImage(contentTypeHeader)
     local contentTypeHeader = string.lower(contentTypeHeader or "")
@@ -15,7 +27,19 @@ local function isContentTypeImage(contentTypeHeader)
     return false
 end
 
-function SrvDupeES.AttemptGetImage(url, callBackSuccess)
+function SrvDupeES.GetImagePath(dupeId)
+    local dupeImageDir = SrvDupeES.PathServerImages or getDupeImageDir()
+    local pathNoExt = dupeImageDir .. "/" .. dupeId
+
+    for _, ext in ipairs(authorizedImageFormats) do
+        local path = pathNoExt .. "." .. ext
+        if file.Exists(path, "DATA") then
+            return path, ext
+        end
+    end
+end
+
+local function getImageFromURL(url, callBackSuccess)
     if not url or url == "" then
         return
     end
@@ -39,42 +63,32 @@ function SrvDupeES.AttemptGetImage(url, callBackSuccess)
     end)
 end
 
-local function getDupeImageDir()
-    local sanitizedIpAddress = string.gsub(game.GetIPAddress() or "0.0.0.0:0", ":", "_")
-
-    local path = SrvDupeES.ImageFolder .. "/" .. sanitizedIpAddress
-    if not file.Exists(path, "DATA") then
-        file.CreateDir(path)
-    end
-    return path
-end
-
-function SrvDupeES.CompareHashImageWithStored(path, sha1Hash, ext)
-    local fileContent = file.Read(path, "DATA")
-    if fileContent and fileContent ~= "" then
-        local fileHash = util.SHA1(fileContent)
-        if fileHash == sha1Hash then
-            return true
-        end
-    end
-
-    return false
-end
-
-function SrvDupeES.SaveImageIfNotExistsAndGet(dupeId, imageData, ext)
-    if not dupeId or not imageData or imageData == "" then
-        print("[SrvDupeES]\tCould not save image for " .. tostring(dupeId) .. ": the content may not be an image")
+function SrvDupeES.AttemptGetImage(dupeId, dupeImageUrl, callBackSuccess)
+    if not dupeId or not dupeImageUrl or dupeImageUrl == "" then
         return
     end
 
-    local sha1Hash = util.SHA1(imageData)
-    local path = getDupeImageDir() .. "/" .. dupeId .. "." .. ext
-    if not SrvDupeES.CompareHashImageWithStored(path, sha1Hash) then
-        file.Write(path, imageData)
-        print("[SrvDupeES]\tSaved image for " .. dupeId .. " at " .. path)
-    else
-        print("[SrvDupeES]\tImage for " .. dupeId .. " at " .. path .. " already exists, skipping")
+    local function saveImage(imageData, ext)
+        if not imageData or imageData == "" then
+            return
+        end
+
+        local path = (SrvDupeES.PathServerImages or getDupeImageDir()) .. "/" .. dupeId .. "." .. ext
+        if path then
+            file.Write(path, imageData)
+            SrvDupeES.CachedImages[dupeId] = {
+                Url = dupeImageUrl,
+                Path = path
+            }
+            callBackSuccess(path)
+        end
     end
 
-    return path
+    local cachedImage = SrvDupeES.CachedImages[dupeId]
+    if cachedImage and file.Exists(cachedImage.Path, "DATA") and dupeImageUrl == cachedImage.Url then
+        callBackSuccess(cachedImage.Path)
+    else
+        SrvDupeES.CachedImages[dupeId] = nil
+        getImageFromURL(dupeImageUrl, saveImage)
+    end
 end
